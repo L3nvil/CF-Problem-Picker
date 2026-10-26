@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CF Problem Picker</title>
+  <link rel="preconnect" href="https://codeforces.com" />
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #171a23;
+      --surface-2: #1f232f;
+      --border: #2a2f3d;
+      --text: #e6e8ee;
+      --text-dim: #9aa3b2;
+      --accent: #4f8cff;
+      --accent-hover: #6aa0ff;
+      --danger: #ff5c5c;
+      --radius: 14px;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+
+      /* Codeforces rank colors */
+      --cf-gray: #808080;
+      --cf-green: #008000;
+      --cf-cyan: #03a89e;
+      --cf-blue: #0000ff;
+      --cf-purple: #aa00aa;
+      --cf-orange: #ff8c00;
+      --cf-red: #ff0000;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.5;
+      min-height: 100%;
+    }
+
+    body {
+      background:
+        radial-gradient(1200px 600px at 80% -10%, rgba(79, 140, 255, 0.12), transparent 60%),
+        radial-gradient(900px 500px at -10% 10%, rgba(170, 0, 170, 0.10), transparent 55%),
+        var(--bg);
+    }
+
+    .wrap {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 32px 20px 64px;
+    }
+
+    header.app-head {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    header.app-head h1 {
+      margin: 0;
+      font-size: clamp(26px, 4.5vw, 38px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #6aa0ff, #aa6aff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    header.app-head p {
+      margin: 6px 0 0;
+      color: var(--text-dim);
+      font-size: 14px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+
+    .field { margin-bottom: 20px; }
+    .field:last-child { margin-bottom: 0; }
+
+    .field > label.lbl {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+    }
+
+    /* Rating controls */
+    .rating-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .rating-inputs {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    select, input[type="text"] {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    select:focus, input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(79, 140, 255, 0.2);
+    }
+    .sep { color: var(--text-dim); font-size: 13px; }
+
+    .presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .preset-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .preset-btn:hover { color: var(--text); border-color: var(--accent); }
+    .preset-btn.active {
+      background: rgba(79, 140, 255, 0.15);
+      border-color: var(--accent);
+      color: var(--accent-hover);
+    }
+
+    /* Tag chips */
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      max-height: 180px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .tag-chip {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s;
+    }
+    .tag-chip:hover { color: var(--text); }
+    .tag-chip.active {
+      background: rgba(170, 106, 255, 0.18);
+      border-color: #aa6aff;
+      color: #c9a7ff;
+    }
+
+    .handle-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .handle-row input[type="text"] { flex: 1; min-width: 180px; }
+    .hint { font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+
+    /* Action button */
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 13px 22px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.08s, background 0.15s, opacity 0.15s;
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn-primary {
+      background: linear-gradient(90deg, var(--accent), #7a6aff);
+      color: #fff;
+      flex: 1;
+      min-width: 200px;
+    }
+    .btn-primary:hover { opacity: 0.92; }
+    .btn-secondary {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-secondary:hover { border-color: var(--accent); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Status line */
+    .status {
+      font-size: 13px;
+      color: var(--text-dim);
+      min-height: 18px;
+      margin-top: 14px;
+      text-align: center;
+    }
+    .status.error { color: var(--danger); }
+
+    /* Problem card */
+    .problem-card {
+      background: linear-gradient(180deg, var(--surface), var(--surface-2));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+      animation: pop 0.25s ease;
+    }
+    @keyframes pop {
+      from { opacity: 0; transform: translateY(8px) scale(0.99); }
+      to   { opacity: 1; transform: none; }
+    }
+    .pc-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .pc-id { font-size: 13px; color: var(--text-dim); font-weight: 600; }
+    .pc-name {
+      font-size: 22px;
+      font-weight: 800;
+      margin: 4px 0 0;
+      letter-spacing: -0.01em;
+    }
+    .rating-badge {
+      flex-shrink: 0;
+      font-weight: 800;
+      font-size: 16px;
+      padding: 6px 14px;
+      border-radius: 10px;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+    }
+    .pc-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin: 18px 0;
+    }
+    .pc-tag {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      border-radius: 999px;
+      padding: 4px 12px;
+      font-size: 12px;
+    }
+    .pc-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .link-btn {
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(90deg, var(--accent), #7a6aff);
+      color: #fff;
+      border-radius: 12px;
+      padding: 12px 20px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    .link-btn:hover { opacity: 0.92; }
+
+    .empty {
+      text-align: center;
+      color: var(--text-dim);
+      padding: 40px 20px;
+      font-size: 15px;
+    }
+
+    footer.foot {
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 12px;
+      margin-top: 28px;
+    }
+    footer.foot a { color: var(--accent-hover); }
+
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid var(--text-dim);
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: -2px;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 520px) {
+      .wrap { padding: 20px 14px 48px; }
+      .panel { padding: 16px; }
+      .btn-primary { min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="app-head">
+      <h1>CF Problem Picker</h1>
+      <p>Random Codeforces problems, filtered to your level.</p>
+    </header>
+
+    <section class="panel" aria-label="Filters">
+      <!-- Rating -->
+      <div class="field">
+        <label class="lbl" for="minRating">Rating range</label>
+        <div class="rating-row">
+          <div class="rating-inputs">
+            <select id="minRating" aria-label="Minimum rating"></select>
+            <span class="sep">to</span>
+            <select id="maxRating" aria-label="Maximum rating"></select>
+          </div>
+        </div>
+        <div class="presets" id="presets" role="group" aria-label="Rating presets"></div>
+      </div>
+
+      <!-- Tags -->
+      <div class="field">
+        <label class="lbl">Tags <span style="text-transform:none;font-weight:400">(optional, match any)</span></label>
+        <div class="tags" id="tags" role="group" aria-label="Tag filters"></div>
+      </div>
+
+      <!-- Handle -->
+      <div class="field">
+        <label class="lbl" for="handle">Codeforces handle <span style="text-transform:none;font-weight:400">(optional &mdash; exclude solved)</span></label>
+        <div class="handle-row">
+          <input type="text" id="handle" placeholder="e.g. tourist" autocomplete="off" spellcheck="false" />
+        </div>
+        <div class="hint">Problems you've already solved (verdict OK) will be excluded from the pool.</div>
+      </div>
+
+      <!-- Actions -->
+      <div class="field">
+        <div class="actions">
+          <button class="btn btn-primary" id="getBtn">🎲 Get Random Problem</button>
+        </div>
+        <div class="status" id="status"></div>
+      </div>
+    </section>
+
+    <section id="result" aria-live="polite">
+      <div class="empty">Set your filters and hit <strong>Get Random Problem</strong>.</div>
+    </section>
+
+    <footer class="foot">
+      Data from the <a href="https://codeforces.com/apiHelp" target="_blank" rel="noopener">Codeforces API</a>.
+      Problemset is cached locally for 12 hours.
+    </footer>
+  </div>
+
+  <script>
+  (function () {
+    "use strict";
+
+    // ----- Config -----
+    var RATINGS = [];
+    for (var r = 800; r <= 3500; r += 100) RATINGS.push(r);
+
+    var PRESETS = [
+      { label: "800",   min: 800,  max: 800 },
+      { label: "1000",  min: 1000, max: 1000 },
+      { label: "1200",  min: 1200, max: 1200 },
+      { label: "1400",  min: 1400, max: 1400 },
+      { label: "1600",  min: 1600, max: 1600 },
+      { label: "1800",  min: 1800, max: 1800 },
+      { label: "2000+", min: 2000, max: 3500 }
+    ];
+
+    var TAGS = [
+      "2-sat", "binary search", "bitmasks", "brute force", "chinese remainder theorem",
+      "combinatorics", "constructive algorithms", "data structures", "dfs and similar",
+      "divide and conquer", "dp", "dsu", "expression parsing", "fft", "flows", "games",
+      "geometry", "graph matchings", "graphs", "greedy", "hashing", "implementation",
+      "interactive", "math", "matrices", "meet-in-the-middle", "number theory",
+      "probabilities", "schedules", "shortest paths", "sortings", "string suffix structures",
+      "strings", "ternary search", "trees", "two pointers"
+    ];
+
+    var CACHE_KEY = "cf_problemset_v1";
+    var CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
+
+    // ----- State -----
+    var state = {
+      selectedTags: {},     // tag -> true
+      problems: [],         // full problemset
+      lastPool: [],         // last filtered pool (for Pick Another)
+      lastShownId: null     // avoid immediate repeat
+    };
+
+    // ----- Elements -----
+    var $ = function (id) { return document.getElementById(id); };
+    var minSel = $("minRating");
+    var maxSel = $("maxRating");
+    var presetsEl = $("presets");
+    var tagsEl = $("tags");
+    var handleEl = $("handle");
+    var getBtn = $("getBtn");
+    var statusEl = $("status");
+    var resultEl = $("result");
+
+    // ----- Build UI -----
+    RATINGS.forEach(function (val) {
+      var o1 = document.createElement("option");
+      o1.value = String(val); o1.textContent = String(val);
+      minSel.appendChild(o1);
+      var o2 = document.createElement("option");
+      o2.value = String(val); o2.textContent = String(val);
+      maxSel.appendChild(o2);
+    });
+    minSel.value = "800";
+    maxSel.value = "1200";
+
+    PRESETS.forEach(function (p) {
+      var b = document.createElement("button");
+      b.className = "preset-btn";
+      b.type = "button";
+      b.textContent = p.label;
+      b.addEventListener("click", function () {
+        minSel.value = String(p.min);
+        maxSel.value = String(p.max);
+        syncPresetHighlight();
+      });
+      presetsEl.appendChild(b);
+    });
+
+    TAGS.forEach(function (tag) {
+      var c = document.createElement("button");
+      c.className = "tag-chip";
+      c.type = "button";
+      c.textContent = tag;
+      c.setAttribute("aria-pressed", "false");
+      c.addEventListener("click", function () {
+        if (state.selectedTags[tag]) {
+          delete state.selectedTags[tag];
+          c.classList.remove("active");
+          c.setAttribute("aria-pressed", "false");
+        } else {
+          state.selectedTags[tag] = true;
+          c.classList.add("active");
+          c.setAttribute("aria-pressed", "true");
+        }
+      });
+      tagsEl.appendChild(c);
+    });
+
+    function syncPresetHighlight() {
+      var mn = minSel.value, mx = maxSel.value;
+      var btns = presetsEl.querySelectorAll(".preset-btn");
+      PRESETS.forEach(function (p, i) {
+        if (String(p.min) === mn && String(p.max) === mx) btns[i].classList.add("active");
+        else btns[i].classList.remove("active");
+      });
+    }
+    minSel.addEventListener("change", syncPresetHighlight);
+    maxSel.addEventListener("change", syncPresetHighlight);
+    syncPresetHighlight();
+
+    // ----- Status helpers -----
+    function setStatus(msg, isError) {
+      statusEl.textContent = msg || "";
+      statusEl.className = "status" + (isError ? " error" : "");
+    }
+    function setLoading(loading, msg) {
+      getBtn.disabled = loading;
+      if (loading) {
+        statusEl.innerHTML = '<span class="spinner"></span>' + (msg || "Working…");
+        statusEl.className = "status";
+      } else if (msg !== undefined) {
+        setStatus(msg);
+      }
+    }
+
+    // ----- Rating color -----
+    function ratingColor(rating) {
+      if (rating === undefined || rating === null) return "var(--cf-gray)";
+      if (rating < 1200) return "var(--cf-gray)";
+      if (rating < 1400) return "var(--cf-green)";
+      if (rating < 1600) return "var(--cf-cyan)";
+      if (rating < 1900) return "var(--cf-blue)";
+      if (rating < 2100) return "var(--cf-purple)";
+      if (rating < 2400) return "var(--cf-orange)";
+      return "var(--cf-red)";
+    }
+
+    // ----- Fetch problemset (cached) -----
+    function loadProblemset() {
+      // try cache
+      try {
+        var raw = localStorage.getItem(CACHE_KEY);
+        if (raw) {
+          var cached = JSON.parse(raw);
+          if (cached && cached.ts && (Date.now() - cached.ts) < CACHE_TTL_MS && Array.isArray(cached.problems)) {
+            state.problems = cached.problems;
+            return Promise.resolve({ fromCache: true });
+          }
+        }
+      } catch (e) { /* ignore cache errors */ }
+
+      return fetch("https://codeforces.com/api/problemset.problems")
+        .then(function (res) {
+          if (!res.ok) throw new Error("Problemset request failed (HTTP " + res.status + ")");
+          return res.json();
+        })
+        .then(function (data) {
+          if (data.status !== "OK") throw new Error("Codeforces API error: " + (data.comment || "unknown"));
+          state.problems = (data.result.problems || []).filter(function (p) {
+            return p.contestId !== undefined && p.index !== undefined;
+          });
+          try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), problems: state.problems }));
+          } catch (e) { /* storage full / disabled — fine, keep in memory */ }
+          return { fromCache: false };
+        });
+    }
+
+    // ----- Fetch solved set for a handle -----
+    function loadSolvedSet(handle) {
+      if (!handle) return Promise.resolve(null);
+      var url = "https://codeforces.com/api/user.status?handle=" + encodeURIComponent(handle);
+      return fetch(url)
+        .then(function (res) {
+          return res.json().then(function (data) {
+            if (data.status !== "OK") {
+              throw new Error(data.comment || "Could not fetch submissions for \"" + handle + "\".");
+            }
+            var solved = {};
+            (data.result || []).forEach(function (sub) {
+              if (sub.verdict === "OK" && sub.problem && sub.problem.contestId !== undefined) {
+                solved[sub.problem.contestId + "-" + sub.problem.index] = true;
+              }
+            });
+            return solved;
+          });
+        });
+    }
+
+    // ----- Filter pool -----
+    function buildPool(solvedSet) {
+      var mn = parseInt(minSel.value, 10);
+      var mx = parseInt(maxSel.value, 10);
+      if (mn > mx) { var t = mn; mn = mx; mx = t; }
+
+      var selTags = Object.keys(state.selectedTags);
+
+      return state.problems.filter(function (p) {
+        if (p.rating === undefined) return false;        // require a rating
+        if (p.rating < mn || p.rating > mx) return false;
+        if (selTags.length) {
+          var ptags = p.tags || [];
+          var any = selTags.some(function (t) { return ptags.indexOf(t) !== -1; });
+          if (!any) return false;
+        }
+        if (solvedSet && solvedSet[p.contestId + "-" + p.index]) return false;
+        return true;
+      });
+    }
+
+    // ----- Render -----
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+      });
+    }
+
+    function renderProblem(p) {
+      var id = p.contestId + p.index;
+      var link = "https://codeforces.com/problemset/problem/" + p.contestId + "/" + p.index;
+      var color = ratingColor(p.rating);
+      var tagsHtml = (p.tags || []).map(function (t) {
+        return '<span class="pc-tag">' + escapeHtml(t) + "</span>";
+      }).join("");
+
+      resultEl.innerHTML =
+        '<div class="problem-card">' +
+          '<div class="pc-top">' +
+            '<div>' +
+              '<div class="pc-id">' + escapeHtml(id) + "</div>" +
+              '<h2 class="pc-name">' + escapeHtml(p.name) + "</h2>" +
+            "</div>" +
+            '<span class="rating-badge" style="background:' + color + '">' + p.rating + "</span>" +
+          "</div>" +
+          '<div class="pc-tags">' + (tagsHtml || '<span class="pc-tag">no tags</span>') + "</div>" +
+          '<div class="pc-actions">' +
+            '<a class="link-btn" href="' + link + '" target="_blank" rel="noopener">Open on Codeforces ↗</a>' +
+            '<button class="btn btn-secondary" id="rerollBtn">🔄 Pick Another</button>' +
+          "</div>" +
+        "</div>";
+
+      var reroll = $("rerollBtn");
+      if (reroll) reroll.addEventListener("click", pickFromLastPool);
+    }
+
+    function pickRandom(pool) {
+      if (!pool.length) return null;
+      if (pool.length === 1) return pool[0];
+      var pick;
+      // avoid showing the exact same problem twice in a row
+      for (var i = 0; i < 6; i++) {
+        pick = pool[Math.floor(Math.random() * pool.length)];
+        var pid = pick.contestId + pick.index;
+        if (pid !== state.lastShownId) break;
+      }
+      return pick;
+    }
+
+    function pickFromLastPool() {
+      if (!state.lastPool.length) { setStatus("Pool is empty — adjust filters and try again.", true); return; }
+      var p = pickRandom(state.lastPool);
+      state.lastShownId = p.contestId + p.index;
+      renderProblem(p);
+      setStatus(state.lastPool.length + " problems match your filters.");
+    }
+
+    // ----- Main flow -----
+    function handleGet() {
+      var handle = handleEl.value.trim();
+      setLoading(true, state.problems.length ? "Filtering…" : "Fetching problemset…");
+
+      loadProblemset()
+        .then(function (meta) {
+          return loadSolvedSet(handle).then(function (solved) {
+            return { meta: meta, solved: solved };
+          });
+        })
+        .then(function (ctx) {
+          var pool = buildPool(ctx.solved);
+          state.lastPool = pool;
+
+          if (!pool.length) {
+            setLoading(false);
+            setStatus("No problems match these filters" + (handle ? " (after excluding solved)" : "") + ". Try widening the range or removing tags.", true);
+            resultEl.innerHTML = '<div class="empty">No matches. Adjust your filters and try again.</div>';
+            return;
+          }
+
+          var p = pickRandom(pool);
+          state.lastShownId = p.contestId + p.index;
+          renderProblem(p);
+
+          var src = ctx.meta.fromCache ? "cached" : "fresh";
+          setLoading(false);
+          setStatus(pool.length + " problems match" + (handle ? ', solved excluded' : '') + " · problemset " + src + ".");
+        })
+        .catch(function (err) {
+          setLoading(false);
+          setStatus(err.message || "Something went wrong. Codeforces may be rate-limiting — wait a couple seconds and retry.", true);
+        });
+    }
+
+    getBtn.addEventListener("click", handleGet);
+    handleEl.addEventListener("keydown", function (e) { if (e.key === "Enter") handleGet(); });
+
+  })();
+  </script>
+</body>
+</html>
